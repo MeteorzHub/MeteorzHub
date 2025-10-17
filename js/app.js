@@ -1,143 +1,131 @@
-import { supabase } from "./supabaseClient.js";
+import { supabase } from './supabaseClient.js';
 
-const $ = (s) => document.querySelector(s);
-const authModal = $("#auth-modal");
-const postModal = $("#post-modal");
+const postScriptBtn = document.getElementById('postScriptBtn');
+const postModal = document.getElementById('postModal');
+const closeModalBtn = document.getElementById('closeModalBtn');
+const submitScriptBtn = document.getElementById('submitScriptBtn');
+const scriptsContainer = document.getElementById('scriptsContainer');
+const searchInput = document.getElementById('searchInput');
+const loginBtn = document.getElementById('loginBtn');
+const logoutBtn = document.getElementById('logoutBtn');
+const profileBtn = document.getElementById('profileBtn');
+const authModal = document.getElementById('authModal');
+const closeAuthModalBtn = document.getElementById('closeAuthModalBtn');
+const toggleAuthMode = document.getElementById('toggleAuthMode');
+const authActionBtn = document.getElementById('authActionBtn');
 
-let isSignup = false;
+let authMode = 'login';
 
-// 🔑 Auth
-async function checkAuth() {
-  const { data } = await supabase.auth.getUser();
-  const user = data?.user;
-  const authArea = document.getElementById("auth-area");
+toggleAuthMode.addEventListener('click', () => {
+  authMode = authMode === 'login' ? 'signup' : 'login';
+  document.getElementById('authTitle').innerText =
+    authMode === 'login' ? 'Login' : 'Sign Up';
+  toggleAuthMode.innerText =
+    authMode === 'login'
+      ? 'Don’t have an account? Sign up'
+      : 'Already have an account? Log in';
+});
 
-  if (user) {
-    authArea.innerHTML = `<span class="muted">${user.email}</span> <button id="btn-logout" class="btn ghost">Logout</button>`;
-    $("#btn-logout").onclick = async () => {
-      await supabase.auth.signOut();
-      location.reload();
-    };
+loginBtn.addEventListener('click', () => authModal.classList.remove('hidden'));
+closeAuthModalBtn.addEventListener('click', () =>
+  authModal.classList.add('hidden')
+);
+
+authActionBtn.addEventListener('click', async () => {
+  const email = document.getElementById('authEmail').value;
+  const password = document.getElementById('authPassword').value;
+  const username = document.getElementById('authUsername').value;
+
+  if (authMode === 'signup') {
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: { data: { username } },
+    });
+    if (error) alert(error.message);
+    else alert('Signup successful! Please verify your email.');
   } else {
-    authArea.innerHTML = `<button id="btn-login" class="btn">Log in</button>`;
-    $("#btn-login").onclick = openAuth;
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) alert(error.message);
   }
-}
+});
 
-function openAuth() {
-  isSignup = false;
-  $("#auth-title").textContent = "Log in";
-  authModal.showModal();
-}
+logoutBtn.addEventListener('click', async () => {
+  await supabase.auth.signOut();
+  alert('Logged out!');
+  location.reload();
+});
 
-$("#auth-switch").onclick = () => {
-  isSignup = !isSignup;
-  $("#auth-title").textContent = isSignup ? "Sign up" : "Log in";
-  $("#auth-switch").textContent = isSignup ? "Switch to Log in" : "Switch to Sign up";
-};
+postScriptBtn.addEventListener('click', () => postModal.classList.remove('hidden'));
+closeModalBtn.addEventListener('click', () => postModal.classList.add('hidden'));
 
-$("#auth-cancel").onclick = () => authModal.close();
+submitScriptBtn.addEventListener('click', async () => {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return alert('Please log in to post!');
 
-$("#auth-form").onsubmit = async (e) => {
-  e.preventDefault();
-  const email = $("#auth-email").value.trim();
-  const pw = $("#auth-password").value;
+  const name = document.getElementById('scriptName').value;
+  const game = document.getElementById('gameName').value;
+  const icon = document.getElementById('iconUrl').value;
+  const keyless = document.getElementById('keyless').value;
+  const script = document.getElementById('scriptContent').value;
 
-  if (isSignup) {
-    const { error } = await supabase.auth.signUp({ email, password: pw });
-    if (error) return alert(error.message);
-    alert("Account created successfully!");
-  } else {
-    const { error } = await supabase.auth.signInWithPassword({ email, password: pw });
-    if (error) return alert(error.message);
-  }
-  authModal.close();
-  checkAuth();
-};
-
-// 📝 Post Script
-$("#btn-post").onclick = async () => {
-  const { data } = await supabase.auth.getUser();
-  if (!data.user) return openAuth();
-  postModal.showModal();
-};
-
-$("#cancel-post").onclick = () => postModal.close();
-
-$("#post-form").onsubmit = async (e) => {
-  e.preventDefault();
-  const { data } = await supabase.auth.getUser();
-  if (!data.user) return alert("You must be logged in!");
-
-  const title = $("#post-title").value.trim();
-  const game = $("#post-game").value.trim();
-  const is_keyless = $("#post-keyless").value === "true";
-  const icon_url = $("#post-icon").value.trim() || null;
-  const description = $("#post-desc").value.trim();
-
-  const { error } = await supabase.from("scripts").insert([
+  const { error } = await supabase.from('scripts').insert([
     {
-      user_id: data.user.id,
-      username: data.user.email.split("@")[0],
-      title,
+      user_id: user.id,
+      name,
       game,
-      description,
-      is_keyless,
-      icon_url,
+      icon,
+      keyless,
+      script,
+      username: user.user_metadata.username,
     },
   ]);
+  if (error) alert(error.message);
+  else {
+    alert('Script posted!');
+    postModal.classList.add('hidden');
+    loadScripts();
+  }
+});
 
-  if (error) return alert(error.message);
-  postModal.close();
-  loadScripts();
-};
-
-// 📚 Load Scripts
 async function loadScripts() {
-  const search = $("#search").value.trim();
-  const keyFilter = $("#filter-keyless").value;
-
-  let { data, error } = await supabase.from("scripts").select("*").order("created_at", { ascending: false });
+  const { data, error } = await supabase.from('scripts').select('*');
   if (error) return console.error(error);
 
-  if (search)
-    data = data.filter(
-      (d) =>
-        d.title.toLowerCase().includes(search.toLowerCase()) ||
-        d.game.toLowerCase().includes(search.toLowerCase())
-    );
-  if (keyFilter !== "all")
-    data = data.filter((d) => d.is_keyless === (keyFilter === "true"));
-
-  renderCards(data);
+  scriptsContainer.innerHTML = data
+    .map(
+      (s) => `
+    <div class="card">
+      <img src="${s.icon || 'https://placehold.co/80'}" alt="${s.name}">
+      <h3>${s.name}</h3>
+      <p><b>Game:</b> ${s.game}</p>
+      <p><b>Keyless:</b> ${s.keyless}</p>
+      <button onclick="navigator.clipboard.writeText(\`${s.script}\`)">📋 Copy Script</button>
+    </div>`
+    )
+    .join('');
 }
 
-function renderCards(items) {
-  const grid = $("#scripts-grid");
-  grid.innerHTML = "";
-  if (!items.length) return (grid.innerHTML = "<p class='muted'>No scripts found.</p>");
+searchInput.addEventListener('input', async (e) => {
+  const query = e.target.value.toLowerCase();
+  const { data } = await supabase.from('scripts').select('*');
+  const filtered = data.filter((s) =>
+    s.name.toLowerCase().includes(query) ||
+    s.game.toLowerCase().includes(query)
+  );
 
-  items.forEach((it) => {
-    const card = document.createElement("article");
-    card.className = "card";
-    card.innerHTML = `
-      <div class="meta">
-        <div class="icon">${it.icon_url ? `<img src="${it.icon_url}" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:8px">` : it.title.charAt(0)}</div>
-        <div style="flex:1">
-          <h4>${it.title}</h4>
-          <small class="muted">${it.username} • ${it.game} • ${it.is_keyless ? "Keyless" : "Keyed"}</small>
-        </div>
-      </div>
-      <p>${it.description}</p>
-      <div class="foot">
-        <small class="muted">${new Date(it.created_at).toLocaleString()}</small>
-      </div>`;
-    grid.appendChild(card);
-  });
-}
+  scriptsContainer.innerHTML = filtered
+    .map(
+      (s) => `
+    <div class="card">
+      <img src="${s.icon || 'https://placehold.co/80'}" alt="${s.name}">
+      <h3>${s.name}</h3>
+      <p><b>Game:</b> ${s.game}</p>
+      <p><b>Keyless:</b> ${s.keyless}</p>
+      <button onclick="navigator.clipboard.writeText(\`${s.script}\`)">📋 Copy Script</button>
+    </div>`
+    )
+    .join('');
+});
 
-$("#search").oninput = loadScripts;
-$("#filter-keyless").onchange = loadScripts;
-
-checkAuth();
 loadScripts();
