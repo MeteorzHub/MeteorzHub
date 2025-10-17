@@ -1,72 +1,56 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Meteorz Script</title>
   <link rel="stylesheet" href="css/styles.css">
+  <script type="module" src="js/app.js" defer></script>
 </head>
 <body>
-  <header class="header">
-    <div class="brand">Meteorz Script</div>
+  <header>
+    <h1 class="logo">⚡ Meteorz Script ⚡</h1>
     <nav>
-      <button id="btn-post" class="btn ghost">➕ Post Script</button>
-      <a id="link-profile" class="btn ghost" href="profile.html">Profile</a>
-      <div id="auth-area">
-        <button id="btn-login" class="btn">Log in</button>
-      </div>
+      <button id="postScriptBtn">＋ Post Script</button>
+      <button id="profileBtn">👤 Profile</button>
+      <button id="loginBtn">🔑 Login</button>
+      <button id="logoutBtn" class="hidden">🚪 Logout</button>
     </nav>
   </header>
 
-  <main class="container">
-    <section class="search-row">
-      <input id="search" placeholder="Search scripts or games..." />
-      <select id="filter-keyless">
-        <option value="all">All</option>
-        <option value="true">Keyless</option>
-        <option value="false">Keyed</option>
-      </select>
-    </section>
-
-    <section id="scripts-grid" class="cards-grid"></section>
+  <main>
+    <input type="text" id="searchInput" placeholder="🔍 Search scripts..." />
+    <div id="scriptsContainer" class="card-grid"></div>
   </main>
 
   <!-- Post Script Modal -->
-  <dialog id="post-modal" class="modal">
-    <form method="dialog" id="post-form" class="modal-form">
-      <h3>Post a Script</h3>
-      <label>Title<input id="post-title" required /></label>
-      <label>Game<input id="post-game" required /></label>
-      <label>Is Keyless?
-        <select id="post-keyless">
-          <option value="true">Yes (Keyless)</option>
-          <option value="false">No (Keyed)</option>
-        </select>
-      </label>
-      <label>Icon URL (optional)<input id="post-icon" /></label>
-      <label>Description<textarea id="post-desc" rows="5" required></textarea></label>
-      <div class="row">
-        <button id="submit-post" class="btn">Post</button>
-        <button id="cancel-post" class="btn ghost">Cancel</button>
-      </div>
-    </form>
-  </dialog>
+  <div id="postModal" class="modal hidden">
+    <div class="modal-content">
+      <h2>Post a Script</h2>
+      <input type="text" id="scriptName" placeholder="Script Name" />
+      <input type="text" id="gameName" placeholder="Game Name" />
+      <input type="text" id="iconUrl" placeholder="Game Icon URL" />
+      <select id="keyless">
+        <option value="Yes">Keyless</option>
+        <option value="No">Requires Key</option>
+      </select>
+      <textarea id="scriptContent" placeholder="Paste your script here..."></textarea>
+      <button id="submitScriptBtn">Post Script</button>
+      <button id="closeModalBtn">Close</button>
+    </div>
+  </div>
 
-  <!-- Login / Signup Modal -->
-  <dialog id="auth-modal" class="modal">
-    <form id="auth-form" class="modal-form">
-      <h3 id="auth-title">Log in</h3>
-      <label>Email<input id="auth-email" type="email" required /></label>
-      <label>Password<input id="auth-password" type="password" required /></label>
-      <div class="row">
-        <button id="auth-submit" class="btn">Submit</button>
-        <button id="auth-switch" class="btn ghost">Switch to Sign up</button>
-        <button id="auth-cancel" class="btn ghost">Cancel</button>
-      </div>
-    </form>
-  </dialog>
-
-  <script type="module" src="js/supabaseClient.js"></script>
-  <script type="module" src="js/app.js"></script>
+  <!-- Auth Modal -->
+  <div id="authModal" class="modal hidden">
+    <div class="modal-content">
+      <h2 id="authTitle">Login / Sign Up</h2>
+      <input type="email" id="authEmail" placeholder="Email" />
+      <input type="text" id="authUsername" placeholder="Username" />
+      <input type="password" id="authPassword" placeholder="Password" />
+      <button id="authActionBtn">Continue</button>
+      <p id="toggleAuthMode">Don’t have an account? Sign up</p>
+      <button id="closeAuthModalBtn">Close</button>
+    </div>
+  </div>
 </body>
 </html>
