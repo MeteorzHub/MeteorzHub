@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Meteorz Script</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Three.js animated background -->
+  <canvas id="bg"></canvas>
+
+  <header>
+    <h1 class="logo">⚡ Meteorz Script ⚡</h1>
+    <nav>
+      <button id="postScriptBtn">＋ Post Script</button>
+      <button id="profileBtn">👤 Profile</button>
+      <button id="loginBtn">🔑 Login</button>
+      <button id="logoutBtn" class="hidden">🚪 Logout</button>
+    </nav>
+  </header>
+
+  <main>
+    <input type="text" id="searchInput" placeholder="🔍 Search scripts..." />
+    <div id="scriptsContainer" class="card-grid"></div>
+  </main>
+
+  <!-- Post Script Modal -->
+  <div id="postModal" class="modal hidden">
+    <div class="modal-content">
+      <h2>Post a Script</h2>
+      <input type="text" id="scriptName" placeholder="Script Name" />
+      <input type="text" id="gameName" placeholder="Game Name" />
+      <input type="text" id="iconUrl" placeholder="Game Icon URL" />
+      <select id="keyless">
+        <option value="Yes">Keyless</option>
+        <option value="No">Requires Key</option>
+      </select>
+      <textarea id="scriptContent" placeholder="Paste your script here..."></textarea>
+      <button id="submitScriptBtn">Post Script</button>
+      <button id="closeModalBtn">Close</button>
+    </div>
+  </div>
+
+  <!-- Auth Modal -->
+  <div id="authModal" class="modal hidden">
+    <div class="modal-content">
+      <h2 id="authTitle">Login / Sign Up</h2>
+      <input type="email" id="authEmail" placeholder="Email" />
+      <input type="text" id="authUsername" placeholder="Username" />
+      <input type="password" id="authPassword" placeholder="Password" />
+      <button id="authActionBtn">Continue</button>
+      <p id="toggleAuthMode">Don’t have an account? Sign up</p>
+      <button id="closeAuthModalBtn">Close</button>
+    </div>
+  </div>
+
+  <script type="module" src="supabaseClient.js"></script>
+  <script type="module" src="three-background.js"></script>
+  <script type="module" src="app.js"></script>
+</body>
+</html>
