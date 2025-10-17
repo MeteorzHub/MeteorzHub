@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Profile — Meteorz Script</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <header class="header">
+    <div class="brand">Meteorz Script</div>
+    <nav>
+      <a class="btn ghost" href="index.html">Home</a>
+      <button id="btn-logout" class="btn">Log out</button>
+    </nav>
+  </header>
+
+  <main class="container">
+    <section class="profile">
+      <h2 id="username-title">Your profile</h2>
+      <div class="profile-actions">
+        <label>Change password <input id="new-password" type="password" placeholder="new password" /></label>
+        <button id="btn-change-pw" class="btn">Change Password</button>
+      </div>
+
+      <h3>Your published scripts</h3>
+      <section id="my-scripts" class="cards-grid"></section>
+    </section>
+  </main>
+
+  <script type="module" src="js/supabaseClient.js"></script>
+  <script type="module" src="js/profile.js"></script>
+</body>
+</html>
