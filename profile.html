@@ -1,34 +1,39 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Profile — Meteorz Script</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Meteorz Profile</title>
   <link rel="stylesheet" href="css/styles.css">
+  <script type="module" src="js/profile.js" defer></script>
 </head>
 <body>
-  <header class="header">
-    <div class="brand">Meteorz Script</div>
+  <header>
+    <h1 class="logo">⚡ Meteorz Profile ⚡</h1>
     <nav>
-      <a class="btn ghost" href="index.html">Home</a>
-      <button id="btn-logout" class="btn">Log out</button>
+      <a href="index.html">🏠 Home</a>
+      <button id="logoutBtn">🚪 Logout</button>
     </nav>
   </header>
 
-  <main class="container">
-    <section class="profile">
-      <h2 id="username-title">Your profile</h2>
-      <div class="profile-actions">
-        <label>Change password <input id="new-password" type="password" placeholder="new password" /></label>
-        <button id="btn-change-pw" class="btn">Change Password</button>
-      </div>
+  <main>
+    <section id="userInfo">
+      <h2>Your Profile</h2>
+      <p id="username"></p>
+      <p id="email"></p>
+    </section>
 
-      <h3>Your published scripts</h3>
-      <section id="my-scripts" class="cards-grid"></section>
+    <section id="userScripts">
+      <h2>Your Posted Scripts</h2>
+      <div id="scriptsContainer" class="card-grid"></div>
+    </section>
+
+    <section id="accountActions">
+      <h2>Account Settings</h2>
+      <input type="password" id="newPassword" placeholder="New Password" />
+      <button id="changePasswordBtn">Change Password</button>
+      <button id="deleteAccountBtn" class="danger">Delete Account</button>
     </section>
   </main>
-
-  <script type="module" src="js/supabaseClient.js"></script>
-  <script type="module" src="js/profile.js"></script>
 </body>
 </html>
