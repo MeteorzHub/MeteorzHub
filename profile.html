@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Meteorz Script | Profile</title>
+  <link rel="stylesheet" href="../style.css">
+</head>
+<body>
+  <!-- Three.js background canvas -->
+  <canvas id="bg"></canvas>
+
+  <header>
+    <h1 class="logo">⚡ Meteorz Script ⚡</h1>
+    <nav>
+      <a href="../index.html"><button>🏠 Home</button></a>
+      <button id="logoutBtn">🚪 Logout</button>
+    </nav>
+  </header>
+
+  <main>
+    <section class="profile-info">
+      <h2>👤 Profile Info</h2>
+      <p><b>Username:</b> <span id="usernameDisplay"></span></p>
+      <p><b>Email:</b> <span id="emailDisplay"></span></p>
+      <button id="changePasswordBtn">🔑 Change Password</button>
+    </section>
+
+    <section class="user-scripts">
+      <h2>📂 Your Scripts</h2>
+      <div id="userScriptsContainer" class="card-grid"></div>
+    </section>
+  </main>
+
+  <script type="module" src="../supabaseClient.js"></script>
+  <script type="module" src="../three-background.js"></script>
+  <script type="module" src="profile.js"></script>
+</body>
+</html>
