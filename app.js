@@ -7,6 +7,7 @@ const closeModalBtn = document.getElementById('closeModalBtn');
 const submitScriptBtn = document.getElementById('submitScriptBtn');
 const scriptsContainer = document.getElementById('scriptsContainer');
 const searchInput = document.getElementById('searchInput');
+
 const loginBtn = document.getElementById('loginBtn');
 const logoutBtn = document.getElementById('logoutBtn');
 const profileBtn = document.getElementById('profileBtn');
@@ -17,6 +18,7 @@ const toggleAuthMode = document.getElementById('toggleAuthMode');
 const authActionBtn = document.getElementById('authActionBtn');
 
 let authMode = 'login';
+let currentUser = null;
 
 /* ===== AUTH MODE TOGGLE ===== */
 toggleAuthMode.addEventListener('click', () => {
@@ -32,82 +34,111 @@ toggleAuthMode.addEventListener('click', () => {
 /* ===== MODAL HANDLERS ===== */
 loginBtn.addEventListener('click', () => authModal.classList.remove('hidden'));
 closeAuthModalBtn.addEventListener('click', () => authModal.classList.add('hidden'));
-
-postScriptBtn.addEventListener('click', () => postModal.classList.remove('hidden'));
+postScriptBtn.addEventListener('click', () => {
+  if (!currentUser) return alert('Please log in to post a script!');
+  postModal.classList.remove('hidden');
+});
 closeModalBtn.addEventListener('click', () => postModal.classList.add('hidden'));
 
-/* ===== AUTH ACTION ===== */
+/* ===== SIGNUP / LOGIN ===== */
 authActionBtn.addEventListener('click', async () => {
   const email = document.getElementById('authEmail').value;
-  const password = document.getElementById('authPassword').value;
   const username = document.getElementById('authUsername').value;
+  const password = document.getElementById('authPassword').value;
+
+  if (!email || !password || (authMode === 'signup' && !username)) {
+    return alert('Please fill all fields!');
+  }
 
   if (authMode === 'signup') {
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: { data: { username } },
-    });
-    if (error) alert(error.message);
-    else alert('Signup successful! Please verify your email.');
+    // Check if email already exists
+    const { data: existing, error: existErr } = await supabase
+      .from('users')
+      .select('*')
+      .eq('email', email)
+      .single();
+
+    if (existing) return alert('Email already registered!');
+
+    const { error } = await supabase.from('users').insert([
+      {
+        username,
+        email,
+        password
+      }
+    ]);
+
+    if (error) return alert(error.message);
+    alert('Signup successful! You can now log in.');
+    authMode = 'login';
+    document.getElementById('authTitle').innerText = 'Login';
+    toggleAuthMode.innerText = 'Don’t have an account? Sign up';
   } else {
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) alert(error.message);
-    else location.reload();
+    // Login
+    const { data: user, error } = await supabase
+      .from('users')
+      .select('*')
+      .eq('email', email)
+      .eq('password', password)
+      .single();
+
+    if (error || !user) return alert('Invalid email or password!');
+    currentUser = user;
+    alert(`Welcome back, ${currentUser.username}!`);
+    authModal.classList.add('hidden');
+    loginBtn.classList.add('hidden');
+    logoutBtn.classList.remove('hidden');
+    profileBtn.classList.remove('hidden');
   }
 });
 
 /* ===== LOGOUT ===== */
-logoutBtn.addEventListener('click', async () => {
-  await supabase.auth.signOut();
-  location.reload();
+logoutBtn.addEventListener('click', () => {
+  currentUser = null;
+  loginBtn.classList.remove('hidden');
+  logoutBtn.classList.add('hidden');
+  profileBtn.classList.add('hidden');
 });
 
 /* ===== POST SCRIPT ===== */
 submitScriptBtn.addEventListener('click', async () => {
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return alert('Please log in to post!');
+  if (!currentUser) return alert('You must be logged in!');
 
-  const name = document.getElementById('scriptName').value;
-  const game = document.getElementById('gameName').value;
-  const icon = document.getElementById('iconUrl').value;
-  const keyless = document.getElementById('keyless').value;
-  const script = document.getElementById('scriptContent').value;
+  const title = document.getElementById('scriptName').value;
+  const code = document.getElementById('scriptContent').value;
+
+  if (!title || !code) return alert('Please fill all fields!');
 
   const { error } = await supabase.from('scripts').insert([
     {
-      user_id: user.id,
-      name,
-      game,
-      icon,
-      keyless,
-      script,
-      username: user.user_metadata.username,
-    },
+      title,
+      code,
+      user_id: currentUser.id
+    }
   ]);
 
-  if (error) alert(error.message);
-  else {
-    alert('Script posted!');
-    postModal.classList.add('hidden');
-    loadScripts();
-  }
+  if (error) return alert(error.message);
+  alert('Script posted!');
+  postModal.classList.add('hidden');
+  loadScripts();
 });
 
 /* ===== LOAD SCRIPTS ===== */
 async function loadScripts() {
-  const { data, error } = await supabase.from('scripts').select('*');
+  const { data: scripts, error } = await supabase
+    .from('scripts')
+    .select('*, users(username)')
+    .order('created_at', { ascending: false });
+
   if (error) return console.error(error);
 
-  scriptsContainer.innerHTML = data
+  scriptsContainer.innerHTML = scripts
     .map(
       (s) => `
     <div class="card">
-      <img src="${s.icon || 'https://placehold.co/80'}" alt="${s.name}">
-      <h3>${s.name}</h3>
-      <p><b>Game:</b> ${s.game}</p>
-      <p><b>Keyless:</b> ${s.keyless}</p>
-      <button onclick="navigator.clipboard.writeText(\`${s.script}\`)">📋 Copy Script</button>
+      <h3>${s.title}</h3>
+      <p><b>Author:</b> ${s.users?.username || 'Unknown'}</p>
+      <button onclick="navigator.clipboard.writeText(\`${s.code}\`)">📋 Copy Script</button>
     </div>`
     )
     .join('');
@@ -116,21 +147,20 @@ async function loadScripts() {
 /* ===== SEARCH FILTER ===== */
 searchInput.addEventListener('input', async (e) => {
   const query = e.target.value.toLowerCase();
-  const { data } = await supabase.from('scripts').select('*');
-  const filtered = data.filter((s) =>
-    s.name.toLowerCase().includes(query) ||
-    s.game.toLowerCase().includes(query)
-  );
+  const { data: scripts } = await supabase
+    .from('scripts')
+    .select('*, users(username)')
+    .order('created_at', { ascending: false });
+
+  const filtered = scripts.filter((s) => s.title.toLowerCase().includes(query));
 
   scriptsContainer.innerHTML = filtered
     .map(
       (s) => `
     <div class="card">
-      <img src="${s.icon || 'https://placehold.co/80'}" alt="${s.name}">
-      <h3>${s.name}</h3>
-      <p><b>Game:</b> ${s.game}</p>
-      <p><b>Keyless:</b> ${s.keyless}</p>
-      <button onclick="navigator.clipboard.writeText(\`${s.script}\`)">📋 Copy Script</button>
+      <h3>${s.title}</h3>
+      <p><b>Author:</b> ${s.users?.username || 'Unknown'}</p>
+      <button onclick="navigator.clipboard.writeText(\`${s.code}\`)">📋 Copy Script</button>
     </div>`
     )
     .join('');
